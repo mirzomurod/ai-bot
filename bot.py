@@ -20,6 +20,7 @@ def get_main_keyboard():
     builder.add(types.KeyboardButton(text="ИИ ЧАТ"))
     builder.add(types.KeyboardButton(text="🎨 РАСМ"))
     builder.add(types.KeyboardButton(text="ЧУСТУЧУ"))
+    builder.add(types.KeyboardButton(text="Салом"))
     return builder.as_markup(resize_keyboard=True)
 
 @dp.message(Command("start"))
@@ -40,6 +41,10 @@ async def sey_hello(message: types.Message):
 async def say_hello(message: types.Message):
      user_modes[message.from_user.id] = 'search'
      await message.answer('Чиро чустучу кардан лозим аст? Нависед:')
+
+@dp.message(lambda message: message.text == "Салом")
+async def say_hello(message: types.Message):
+     await message.answer('Салом')
 
 @dp.message()
 async def ai_response(message: types.Message):
