@@ -1,13 +1,11 @@
 import os
 import asyncio
-
 from aiogram import Bot, Dispatcher, types
 from aiogram.filters import Command
 from aiogram.utils.keyboard import ReplyKeyboardBuilder
-from aiogram.types import FSInputFile
-from ai_chat import chat, generate_image, search
-import openai
+from ai_chat import chat
 
+# ИСПРАВЛЕНО: добавлен import os
 TOKEN = os.getenv("BOT_TOKEN")
 
 bot = Bot(token=TOKEN)
@@ -18,9 +16,7 @@ user_modes: dict[int, str] = {}
 def get_main_keyboard():
     builder = ReplyKeyboardBuilder()
     builder.add(types.KeyboardButton(text="ИИ ЧАТ"))
-    builder.add(types.KeyboardButton(text="🎨 РАСМ"))
-    builder.add(types.KeyboardButton(text="ЧУСТУЧУ"))
-    builder.add(types.KeyboardButton(text="Салом"))
+    builder.add(types.KeyboardButton(text="Саломалейкум"))
     return builder.as_markup(resize_keyboard=True)
 
 @dp.message(Command("start"))
@@ -30,44 +26,30 @@ async def cmd_start(message: types.Message):
 @dp.message(lambda message: message.text == "ИИ ЧАТ")
 async def say_hello(message: types.Message):
     user_modes[message.from_user.id] = 'chat'
-    await message.answer("Режими ИИ фаъол аст.Саволатонро нависед")
+    await message.answer("Режими ИИ фаъол аст. Саволатонро нависед")
 
-@dp.message(lambda message: message.text == "🎨РАСМ")
-async def sey_hello(message: types.Message):
-     user_modes[message.from_user.id] = 'image'
-     await message.answer('Чи расм тасвир кардан лозим аст? Промтро пурра нависед')
-
-@dp.message(lambda message: message.text == "ЧУСТУЧУ")
-async def say_hello(message: types.Message):
-     user_modes[message.from_user.id] = 'search'
-     await message.answer('Чиро чустучу кардан лозим аст? Нависед:')
-
-@dp.message(lambda message: message.text == "Салом")
-async def say_hello(message: types.Message):
-     await message.answer('Воалейкум АКА созаки хубаки?')
+@dp.message(lambda message: message.text == "Саломалейкум")
+async def say_hello_2(message: types.Message):
+    await message.answer('Воалейкум АКА созаки хубаки?')
 
 @dp.message()
 async def ai_response(message: types.Message):
-    if user_modes[message.from_user.id] == 'chat':
-         await message.answer('Фикр карда истодаам...')
-         answer = chat(message.from_user.id, message.text)
-         await message.answer(answer)
-
-    elif user_modes[message.from_user.id] == 'image':
-        await message.answer('🎨 Расми шумо тайёр шуда истодааст...')
+    # ИСПРАВЛЕНО: используем .get(), чтобы бот не падал, если кнопка не нажата
+    mode = user_modes.get(message.from_user.id)
+    
+    if mode == 'chat':
+        await message.answer('Фикр карда истодаам...')
         try:
-           filename = generate_image(message.from_user.id, message.text)
-           photo = FSInputFile(filename)
-           await message.answer_photo(photo, caption="Мархамат расми шумо")
-        except openai.BadRequestError:
-             await message.answer('Ин расм хукуки авторирро нарушат мекунад')
-    elif user_modes[message.from_user.id] == 'search':
-        await message.answer('Дар чустучу...')
-        result = search(message.text)
-        await message.answer(result)
+            answer = chat(message.from_user.id, message.text)
+            await message.answer(answer)
+        except Exception as e:
+            await message.answer(f"Хатои техникӣ: {e}")
+    else:
+        # Если пользователь пишет без выбора режима, просим нажать кнопку
+        await message.answer("Лутфан, аввал тугмаи 'ИИ ЧАТ'-ро зер кунед.")
 
 async def main():
     await dp.start_polling(bot)
 
 if __name__ == "__main__":
-        asyncio.run(main())
+    asyncio.run(main())
